@@ -3,14 +3,14 @@ import clickhouse_connect
 from datetime import datetime
 from api_request import fetch_data, mock_fetch_data
 # ===== Config (set bằng env cho tiện) =====
-CH_HOST = os.getenv("CH_HOST", "localhost")
-CH_PORT = int(os.getenv("CH_PORT", "8123"))          # HTTP port (Cloud thường 8443 + https)
-CH_USER = os.getenv("CH_USER", "default")
-CH_PASSWORD = os.getenv("CH_PASSWORD", "")
-CH_DATABASE = os.getenv("CH_DATABASE", "weather")
+# CH_HOST = os.getenv("CH_HOST", "localhost")
+# CH_PORT = int(os.getenv("CH_PORT", "8123"))          
+# CH_USER = os.getenv("CH_USER", "default")
+# CH_PASSWORD = os.getenv("CH_PASSWORD", "")
+# CH_DATABASE = os.getenv("CH_DATABASE", "weather")
 
 # Nếu ClickHouse Cloud dùng HTTPS:
-CH_SECURE = os.getenv("CH_SECURE", "false").lower() == "true"
+# CH_SECURE = os.getenv("CH_SECURE", "false").lower() == "true"
 
 def connect_to_clickhouse():
     try:
@@ -80,8 +80,8 @@ def insert_records_clickhouse(client, data):
     
 def main():
     try:
-        data = mock_fetch_data()
-        # data = fetch_data()
+        # data = mock_fetch_data()
+        data = fetch_data()
         client = connect_to_clickhouse()
         # create_table(client)
         insert_records_clickhouse(client, data)
@@ -91,5 +91,3 @@ def main():
         if 'client' in locals():
             client.close()
             print("Clickhouse connection closed.")
-
-main()
