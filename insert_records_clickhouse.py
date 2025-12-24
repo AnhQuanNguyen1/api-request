@@ -51,25 +51,27 @@ def create_table(client):
         print(f"Failed to create table: {e}")
         raise
 
-from datetime import datetime
+def insert_records_clickhouse(client, n_records=20000, query="New York", country="United States of America"):
+    rows = []
 
-def insert_records_clickhouse(client, data):
-    weather = data["current"]
-    location = data["location"]
+    for _ in range(n_records):
+        data = mock_fetch_data(query=query, country=country)
+        weather = data["current"]
+        location = data["location"]
 
-    localtime_str = location.get("localtime")  # ví dụ "2025-12-23 10:30"
-    if isinstance(localtime_str, str) and len(localtime_str) == 16:
-        localtime_str += ":00"
-    event_time = datetime.fromisoformat(localtime_str)
+        localtime_str = location.get("localtime")  # "YYYY-MM-DD HH:MM"
+        if isinstance(localtime_str, str) and len(localtime_str) == 16:
+            localtime_str += ":00"
+        event_time = datetime.fromisoformat(localtime_str)
 
-    rows = [(
-        location.get("name"),
-        float(weather.get("temperature")) if weather.get("temperature") is not None else None,
-        (weather.get("weather_descriptions") or [""])[0],
-        float(weather.get("wind_speed")) if weather.get("wind_speed") is not None else None,
-        event_time,
-        str(location.get("utc_offset")),
-    )]
+        rows.append((
+            location.get("name"),
+            float(weather.get("temperature")) if weather.get("temperature") is not None else None,
+            (weather.get("weather_descriptions") or [""])[0],
+            float(weather.get("wind_speed")) if weather.get("wind_speed") is not None else None,
+            event_time,
+            str(location.get("utc_offset")),
+        ))
 
     client.insert(
         "default.raw_weather_data",
@@ -77,16 +79,18 @@ def insert_records_clickhouse(client, data):
         column_names=["city", "temperature", "weather_descriptions", "wind_speed", "time", "utc_offset"],
     )
 
+    return n_records  # optional
     
 def main():
     try:
-        # data = mock_fetch_data()
-        data = fetch_data()
+        data = mock_fetch_data()
+        # data = fetch_data()
         client = connect_to_clickhouse()
         # create_table(client)
-        insert_records_clickhouse(client, data)
+        insert_records_clickhouse(client, n_records=100000, query="Phu Tho", country="Viet Nam")
     except Exception as e:
         print(f"An error occurred during execution: {e}")
+        
     finally:
         if 'client' in locals():
             client.close()
